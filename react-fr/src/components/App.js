@@ -7,6 +7,19 @@ import {
 
 import { userType as  DefinedUserType } from '../data';
 
+// Table data スキーマ
+/**
+ * @typedef {Object} TData - Table data
+ * @property {Object} name
+ * @property {String} address
+ * @property {String} city
+ * @property {String} state
+ */
+
+
+/**
+ * @type {TData}
+ */
 const data = [
   {
     name: {
@@ -52,7 +65,7 @@ const data = [
     address: '32188 Larkin Turnpike',
     city: 'Charleston',
     state: 'South Carolina',
-  },
+  }
 ];
 
 function App({userType}) {
@@ -60,6 +73,9 @@ function App({userType}) {
   
   console.log("Logging",userType,DefinedUserType.admin)
 
+  /**
+  * @type {import('material-react-table').MRT_ColumnDef<User>[]}
+  */
   const columns = useMemo(
     () => [
       {
