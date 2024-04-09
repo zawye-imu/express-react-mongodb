@@ -82,11 +82,18 @@ function App({userType}) {
         accessorKey: 'name.firstName', //access nested data with dot notation
         header: 'First Name',
         size: 150,
+        Cell: ({cell})=>{
+          return (<span style={{color:'red'}}>{cell.getValue()}</span>)
+        }
       },
       {
         accessorKey: 'name.lastName',
         header: 'Last Name',
         size: 150,
+        Footer: (obj) =>{
+          console.log("logging 2",obj);
+          return (<span >Hello</span>)
+        }
       },
       {
         accessorKey: 'address', //normal accessorKey
@@ -97,11 +104,23 @@ function App({userType}) {
         accessorKey: 'city',
         header: 'City',
         size: 150,
+        muiTableHeadCellProps: {
+          align: 'center',
+        },
+        muiTableBodyCellProps: {
+          align: 'center',
+        },
       },
       {
         accessorKey: 'state',
         header: 'State',
         size: 150,
+        muiTableHeadCellProps: {
+          align: 'center',
+        },
+        muiTableBodyCellProps: {
+          align: 'center',
+        },
       },
     ],
     []
@@ -110,7 +129,12 @@ function App({userType}) {
   const table = useMaterialReactTable({
     columns, 
     data, 
-    initialState: { columnVisibility: { state: userType === DefinedUserType.admin ? true : false } }, 
+    initialState: { columnVisibility: { state: userType === DefinedUserType.admin ? true : false } },
+    enableRowActions: true,
+    displayColumnDefOptions: { 'mrt-row-actions': { size: 120 } },
+    renderRowActions: ({row}) =>{
+      return (<button>Click me</button>)
+    }, 
   });
 
   return (
