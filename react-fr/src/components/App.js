@@ -16,7 +16,17 @@ import { userType as  DefinedUserType } from '../data';
  * @property {String} state
  */
 
+function createDateFromYearMonth(yearMonthString) {
+  // Split the string into year and month parts
+  var parts = yearMonthString.split('/');
 
+  // Extract year and month from parts
+  var year = parseInt(parts[0], 10);
+  var month = parseInt(parts[1], 10) - 1; // Subtract 1 because months are zero-based in JavaScript
+
+  // Create a new Date object with the specified year and month
+  return new Date(year, month);
+}
 /**
  * @type {TData}
  */
@@ -28,7 +38,7 @@ const data = [
     memberID: '111',
     formerID: '10001',
     mailAddress: 'JD@erd.co',
-    startYM: '2024/04',
+    startYM: createDateFromYearMonth('2024/04'),
     endYM: '2024/12'
   },
   {
@@ -38,7 +48,7 @@ const data = [
     memberID: '112',
     formerID: '10002',
     mailAddress: 'Jane@erd.co',
-    startYM: '2024/04',
+    startYM: createDateFromYearMonth('2024/04'),
     endYM: '2024/12'
   },
   {
@@ -48,7 +58,7 @@ const data = [
     memberID: '113',
     formerID: 'HJ009',
     mailAddress: 'ta2020@free.net',
-    startYM: '2024/04',
+    startYM: createDateFromYearMonth('2024/04'),
     endYM: '2025/12'
   },
   {
@@ -58,7 +68,7 @@ const data = [
     memberID: '114',
     formerID: 'HHH20',
     mailAddress: 'sky@hotmail.com',
-    startYM: '2024/04',
+    startYM: createDateFromYearMonth('2024/04'),
     endYM: '2025/12'
   }
 ];
@@ -131,7 +141,12 @@ function App({userType}) {
         accessorKey: 'startYM', //normal accessorKey
         header: '配属日',
         size: 200,
-        filterVariant: "date-range"
+        filterVariant: "date-range",
+        Cell: ({ cell }) => cell.getValue().toLocaleDateString(),
+        muiFilterDatePickerProps:{
+          format:"YYYY/MM",
+          views: ['month','year']
+        }
       },
       {
         accessorKey: 'endYM', //normal accessorKey
