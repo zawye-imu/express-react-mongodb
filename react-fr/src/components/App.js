@@ -1,5 +1,5 @@
 import './App.css';
-import { useMemo } from 'react';
+import { useMemo,useState } from 'react';
 import {
   MaterialReactTable,
   useMaterialReactTable,
@@ -30,8 +30,10 @@ function createDateFromYearMonth(yearMonthString) {
 /**
  * @type {TData}
  */
-const data = [
+const sampleData = [
   {
+    ordering: 0,  
+    active: true,
     name: "John",
     fullname: "JohnDoe",
     company: '261 Erdman Ford',
@@ -42,6 +44,8 @@ const data = [
     endYM: '2024/12'
   },
   {
+    ordering: 1, 
+    active: true,
     name: "Jane",
     fullname: "Jane Doe",
     company: '261 Erdman Ford',
@@ -52,6 +56,8 @@ const data = [
     endYM: '2024/12'
   },
   {
+    ordering: 2, 
+    active: true,
     name: "Aung",
     fullname: "Than Aung",
     company: 'Freedom Exp.',
@@ -62,6 +68,8 @@ const data = [
     endYM: '2025/12'
   },
   {
+    ordering: 3, 
+    active: true,
     name: "Satou",
     fullname: "Satou",
     company: 'Gfords',
@@ -73,12 +81,14 @@ const data = [
   }
 ];
 
-const companySelect = data.map(d => d.company);
+const companySelect = sampleData.map(d => d.company);
 
 function App({userType}) {
   //should be memoized or stable
+
+  const [data,setData] = useState(sampleData);
+  const [orders,setOrders] =  useState([]);
   
-  console.log("Logging",userType,DefinedUserType.admin)
 
   /**
   * @type {import('material-react-table').MRT_ColumnDef<User>[]}
@@ -99,7 +109,6 @@ function App({userType}) {
         header: 'Name',
         size: 150,
         Footer: (obj) =>{
-          console.log("logging 2",obj);
           return (<span >Hello</span>)
         }
       },
@@ -164,6 +173,28 @@ function App({userType}) {
       columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false },
       showColumnFilters: true,
     },
+    enableRowOrdering:true,
+    muiRowDragHandleProps:({table}) =>({
+      onDragEnd: () => {
+        //data re-ordering logic here
+        const { draggingRow, hoveredRow } = table.getState();
+        console.log("logging drag",draggingRow,hoveredRow)
+        data.splice(
+          hoveredRow.index,
+          0,
+          data.splice(draggingRow.index, 1)[0],
+        );
+
+        // DB保存するため
+        const orders = data.map(d=>d.ordering)
+        setOrders(orders)
+        
+
+
+        setData([...data]);
+      },
+    }),
+    enableSorting: false,
     enableRowActions: true,
     displayColumnDefOptions: { 'mrt-row-actions': { size: 120 } },
     renderRowActions: ({row}) =>{
@@ -174,6 +205,7 @@ function App({userType}) {
   return (
     <div className="App">
       Hello
+      <button onClick={()=> console.log(orders)}>Check Orders</button>
       <MaterialReactTable table={table} />
     </div>
   );
