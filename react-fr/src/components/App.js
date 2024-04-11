@@ -32,6 +32,7 @@ function createDateFromYearMonth(yearMonthString) {
  */
 const sampleData = [
   {
+    id:1,
     ordering: 0,  
     active: true,
     name: "John",
@@ -44,6 +45,7 @@ const sampleData = [
     endYM: '2024/12'
   },
   {
+    id:2,
     ordering: 1, 
     active: true,
     name: "Jane",
@@ -56,6 +58,7 @@ const sampleData = [
     endYM: '2024/12'
   },
   {
+    id:3,
     ordering: 2, 
     active: true,
     name: "Aung",
@@ -68,6 +71,7 @@ const sampleData = [
     endYM: '2025/12'
   },
   {
+    id:4,
     ordering: 3, 
     active: true,
     name: "Satou",
@@ -88,6 +92,10 @@ function App({userType}) {
 
   const [data,setData] = useState(sampleData);
   const [orders,setOrders] =  useState([]);
+
+  const saveEditedUser =  () => {
+    console.log("Here")
+  }
   
 
   /**
@@ -111,6 +119,28 @@ function App({userType}) {
         Footer: (obj) =>{
           return (<span >Hello</span>)
         }
+      },
+      {
+        accessorKey: 'active',
+        header: '状態',
+        size: 150,
+        Cell: ({cell}) => (cell.getValue() === true ? '有効' : '無効'),
+        editVariant: "select",
+        editSelectOptions: ['有効','無効'],
+        enableEditing: true,
+        muiTableBodyCellProps: ({ cell,table }) => ({
+          onDoubleClick: (event) => {
+            table.setEditingCell(cell)
+          },
+        }),
+        muiEditTextFieldProps: ({ row }) => ({
+          select: true,
+          onChange: (event) => {
+            const tmp = [...data]
+            tmp.find(t => t.id ===  row.original.id).active = (event.target.value === "有効" ? true : false)
+            setData(tmp);
+          }
+        }),
       },
       {
         accessorKey: 'company', //normal accessorKey
@@ -163,7 +193,7 @@ function App({userType}) {
         size: 200,
       },
     ],
-    []
+    [data]
   );
 
   const table = useMaterialReactTable({
@@ -172,8 +202,13 @@ function App({userType}) {
     initialState: { 
       columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false },
       showColumnFilters: true,
+      editingCell:null,
     },
     enableRowOrdering:true,
+    enableEditing: true,
+    editDisplayMode: "row",
+    onEditingRowCancel: ()=> console.log("Cancled"),
+    onEditingRowSave: saveEditedUser,
     muiRowDragHandleProps:({table}) =>({
       onDragEnd: () => {
         //data re-ordering logic here
@@ -197,8 +232,8 @@ function App({userType}) {
     enableSorting: false,
     enableRowActions: true,
     displayColumnDefOptions: { 'mrt-row-actions': { size: 120 } },
-    renderRowActions: ({row}) =>{
-      return (<button>Click me</button>)
+    renderRowActions: ({row,table}) =>{
+      return (<button onClick={()=>table.setEditingRow(row)}>Edit</button>)
     }, 
   });
 
@@ -206,6 +241,7 @@ function App({userType}) {
     <div className="App">
       Hello
       <button onClick={()=> console.log(orders)}>Check Orders</button>
+      <button onClick={()=> console.log(data)}>Check Data</button>
       <MaterialReactTable table={table} />
     </div>
   );
