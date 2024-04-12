@@ -6,6 +6,7 @@ import {
 } from 'material-react-table';
 
 import { userType as  DefinedUserType } from '../data';
+import { DatePicker } from '@mui/x-date-pickers';
 
 // Table data スキーマ
 /**
@@ -96,6 +97,12 @@ function App({userType}) {
   const saveEditedUser =  () => {
     console.log("Here")
   }
+
+  const createUser = ({values,table}) => {
+    // validation here
+    setData([...data,values])
+    table.setCreatingRow(false)
+  }
   
 
   /**
@@ -136,9 +143,15 @@ function App({userType}) {
         muiEditTextFieldProps: ({ row }) => ({
           select: true,
           onChange: (event) => {
+            // 編集の場合
             const tmp = [...data]
-            tmp.find(t => t.id ===  row.original.id).active = (event.target.value === "有効" ? true : false)
-            setData(tmp);
+            let targetData = tmp.find(t => t.id ===  row.original.id);
+            // 
+            if(targetData) {
+              targetData.active = (event.target.value === "有効" ? true : false)
+              setData(tmp);
+            }
+            
           }
         }),
       },
@@ -181,7 +194,12 @@ function App({userType}) {
         header: '配属日',
         size: 200,
         filterVariant: "date-range",
-        Cell: ({ cell }) => cell.getValue().toLocaleDateString(),
+        Edit: ({table,row,column}) => {
+          return <DatePicker onChange={(newVal)=>{
+            row._valuesCache[column.id] = newVal;
+          }} label="date"></DatePicker>
+        },
+        Cell: ({ cell }) => String(cell.getValue()),
         muiFilterDatePickerProps:{
           format:"YYYY/MM",
           views: ['month','year']
@@ -207,7 +225,9 @@ function App({userType}) {
     enableRowOrdering:true,
     enableEditing: true,
     editDisplayMode: "row",
-    onEditingRowCancel: ()=> console.log("Cancled"),
+    onCreatingRowSave: createUser,
+    createDisplayMode: "row",
+    onEditingRowCancel: ()=> console.log("Canceled"),
     onEditingRowSave: saveEditedUser,
     muiRowDragHandleProps:({table}) =>({
       onDragEnd: () => {
@@ -242,6 +262,7 @@ function App({userType}) {
       Hello
       <button onClick={()=> console.log(orders)}>Check Orders</button>
       <button onClick={()=> console.log(data)}>Check Data</button>
+      <button onClick={()=> table.setCreatingRow(true)}>Create Row</button>
       <MaterialReactTable table={table} />
     </div>
   );
