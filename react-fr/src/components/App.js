@@ -195,7 +195,12 @@ function App({userType}) {
         size: 200,
         filterVariant: "date-range",
         Edit: ({table,row,column}) => {
-          return <DatePicker onChange={(newVal)=>{
+          const props = {
+            format: "YYYY/MM",
+            views: ['month','year']
+          };
+          return <DatePicker {...props}
+          onChange={(newVal)=>{
             row._valuesCache[column.id] = newVal;
           }} label="date"></DatePicker>
         },
@@ -251,10 +256,24 @@ function App({userType}) {
     }),
     enableSorting: false,
     enableRowActions: true,
+    enableDensityToggle: false,
+    enableFullScreenToggle: false,
+    enableGlobalFilter: false,
+    enableHiding: false,
+    enableTopToolbar: false,
     displayColumnDefOptions: { 'mrt-row-actions': { size: 120 } },
     renderRowActions: ({row,table}) =>{
       return (<button onClick={()=>table.setEditingRow(row)}>Edit</button>)
     }, 
+    // enableTopToolbar と結果が同様
+    // muiTopToolbarProps:{
+    //   sx:{
+    //     backgroundColor:"silver",
+    //     "& .css-78trlr-MuiButtonBase-root-MuiIconButton-root":{
+    //       display: "none"
+    //     }
+    //   }
+    // }
   });
 
   return (
