@@ -238,19 +238,25 @@ function App({userType}) {
       onDragEnd: () => {
         //data re-ordering logic here
         const { draggingRow, hoveredRow } = table.getState();
-        console.log("logging drag",draggingRow,hoveredRow)
-        data.splice(
-          hoveredRow.index,
-          0,
-          data.splice(draggingRow.index, 1)[0],
-        );
+        
+        // 順番置き換え
+        let draggedIndex = draggingRow.index;
+        let hoveredIndex = hoveredRow.index;
+        let tmp = data[draggedIndex]
+        data[draggedIndex] = data[hoveredIndex]
+        data[hoveredIndex] = tmp
+        
+        // ドラッグした行を下か上に置く
+        // data.splice(
+        //   hoveredRow.index,
+        //   0,
+        //   data.splice(draggingRow.index, 1)[0],
+        // );
 
-        // DB保存するため
+        // DB保存するため、idプロパティでもOK
         const orders = data.map(d=>d.ordering)
         setOrders(orders)
-        
-
-
+      
         setData([...data]);
       },
     }),
@@ -265,7 +271,7 @@ function App({userType}) {
     renderRowActions: ({row,table}) =>{
       return (<button onClick={()=>table.setEditingRow(row)}>Edit</button>)
     }, 
-    // enableTopToolbar と結果が同様
+    // enableTopToolbar: false と結果が同様
     // muiTopToolbarProps:{
     //   sx:{
     //     backgroundColor:"silver",
@@ -278,7 +284,6 @@ function App({userType}) {
 
   return (
     <div className="App">
-      Hello
       <button onClick={()=> console.log(orders)}>Check Orders</button>
       <button onClick={()=> console.log(data)}>Check Data</button>
       <button onClick={()=> table.setCreatingRow(true)}>Create Row</button>
