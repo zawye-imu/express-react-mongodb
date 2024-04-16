@@ -1,12 +1,14 @@
 import './App.css';
 import { useMemo,useState } from 'react';
 import {
+  createRow,
   MaterialReactTable,
   useMaterialReactTable,
 } from 'material-react-table';
 
 import { userType as  DefinedUserType } from '../data';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Select,MenuItem } from '@mui/material';
 
 // Table data スキーマ
 /**
@@ -61,7 +63,7 @@ const sampleData = [
   {
     id:3,
     ordering: 2, 
-    active: true,
+    active: false,
     name: "Aung",
     fullname: "Than Aung",
     company: 'Freedom Exp.',
@@ -93,13 +95,27 @@ function App({userType}) {
 
   const [data,setData] = useState(sampleData);
   const [orders,setOrders] =  useState([]);
+  const [validationErrors,setValidationErrors] = useState({});
 
-  const saveEditedUser =  () => {
-    console.log("Here")
+  const saveEditedUser =  ({values,table}) => {
+    console.log("Here",values)
+  }
+
+  const validateUser = (user) => {
+    return {
+      name: user.name ? "" : "名前が必要です"
+    }
   }
 
   const createUser = ({values,table}) => {
     // validation here
+    let newValidationErrors = validateUser(values)
+    if(Object.values(newValidationErrors).some((error) => error)){
+      setValidationErrors(newValidationErrors)
+      return
+    }
+
+    setValidationErrors({})
     setData([...data,values])
     table.setCreatingRow(false)
   }
@@ -111,12 +127,17 @@ function App({userType}) {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'name', //access nested data with dot notation
+        accessorKey: 'name', 
         header: '名前',
         filterVariant: 'text',
         size: 150,
         Cell: ({cell})=>{
           return (<span style={{color:'red'}}>{cell.getValue()}</span>)
+        },
+        muiEditTextFieldProps: {
+          required: true,
+          error: !!validationErrors?.name,
+          helperText: validationErrors?.name,
         }
       },
       {
@@ -132,28 +153,57 @@ function App({userType}) {
         header: '状態',
         size: 150,
         Cell: ({cell}) => (cell.getValue() === true ? '有効' : '無効'),
-        editVariant: "select",
-        editSelectOptions: ['有効','無効'],
+        // editVariant: "select",
+        // editSelectOptions: ['有効','無効'],
         enableEditing: true,
         muiTableBodyCellProps: ({ cell,table }) => ({
           onDoubleClick: (event) => {
             table.setEditingCell(cell)
           },
         }),
-        muiEditTextFieldProps: ({ row }) => ({
-          select: true,
-          onChange: (event) => {
-            // 編集の場合
+        Edit: ({table,row,column,cell}) => {
+          const [val,setVal] = useState(cell.getValue())
+          return <Select
+          sx={{minWidth: 120}}
+          variant='standard'
+          value={val}
+          onChange={(event)=>{
+            //　新規行の作成ため
+            row._valuesCache[column.id] = event.target.value;
+
+            //　値が変わるため
+            setVal(event.target.value)
+
+            //　直接編集のため
             const tmp = [...data]
             let targetData = tmp.find(t => t.id ===  row.original.id);
-            // 
             if(targetData) {
-              targetData.active = (event.target.value === "有効" ? true : false)
+              targetData.active = event.target.value;
               setData(tmp);
+              table.setEditingCell(false)
             }
+            console.log("logging",table,row,cell)
+          }}
+          >
+            <MenuItem value={true}>有効</MenuItem>
+            <MenuItem value={false}>無効</MenuItem>
+          </Select>
+        }
+        // muiEditTextFieldProps: ({ row }) => ({
+        //   defaultValue: '有効',
+        //   select: true,
+        //   onChange: (event) => {
+        //     // 編集の場合
+        //     const tmp = [...data]
+        //     let targetData = tmp.find(t => t.id ===  row.original.id);
+        //     // 
+        //     if(targetData) {
+        //       targetData.active = (event.target.value === "有効" ? true : false)
+        //       setData(tmp);
+        //     }
             
-          }
-        }),
+        //   }
+        // }),
       },
       {
         accessorKey: 'company', //normal accessorKey
@@ -216,16 +266,18 @@ function App({userType}) {
         size: 200,
       },
     ],
-    [data]
+    [data,validationErrors]
   );
 
   const table = useMaterialReactTable({
     columns, 
     data, 
     initialState: { 
-      columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false },
+      columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false,"mrt-row-drag":userType === DefinedUserType.admin ? true : false },
       showColumnFilters: true,
       editingCell:null,
+      columnOrder: ["mrt-row-drag","mrt-row-select","mrt-row-actions","name","fullname","active","compnay","memberID",
+    "formerID","mailAddress","startYM","endYM"]
     },
     enableRowOrdering:true,
     enableEditing: true,
@@ -260,6 +312,7 @@ function App({userType}) {
         setData([...data]);
       },
     }),
+    enableRowSelection: true,
     enableSorting: false,
     enableRowActions: true,
     enableDensityToggle: false,
@@ -286,7 +339,9 @@ function App({userType}) {
     <div className="App">
       <button onClick={()=> console.log(orders)}>Check Orders</button>
       <button onClick={()=> console.log(data)}>Check Data</button>
-      <button onClick={()=> table.setCreatingRow(true)}>Create Row</button>
+      <button onClick={()=> table.setCreatingRow(createRow(table,{
+        active: true
+      }))}>Create Row</button>
       <MaterialReactTable table={table} />
     </div>
   );
