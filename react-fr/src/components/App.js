@@ -9,7 +9,7 @@ import {
 import { userType as  DefinedUserType } from '../data';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Select,MenuItem } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery,useMutation,useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 // Table data スキーマ
 /**
@@ -98,17 +98,48 @@ function App({userType}) {
   const [orders,setOrders] =  useState([]);
   const [validationErrors,setValidationErrors] = useState({});
 
+  const queryClient = useQueryClient();
+
   const dataQuery = useQuery({
     queryKey: ['userData'],
     queryFn: async () =>
       axios
-        .get('http://localhost:8000/test-data')
+        .get('http://localhost:8000/users')
         .then((res) => res.data),
   })
 
+  // サーバーに追加
+  const userMutation = useMutation({
+    mutationFn: async (user) => {
+      return axios.post('http://localhost:8000/user-add', user)
+  },
+  onSuccess: ()=> queryClient.invalidateQueries({queryKey: ["userData"]})
 
-  const saveEditedUser =  ({values,table}) => {
-    console.log("Here",values)
+  })
+
+  // サーバーに追加
+  const userMutationUpdate = useMutation({
+    mutationFn: async (data) => {
+      console.log("logging",data)
+      return 
+      // return axios.put(`http://localhost:8000/user-update/${id}`, data)
+  },
+  // onSuccess: ()=> queryClient.setQueryData(['userData',{_id:id}],data)
+
+  })
+
+
+  const saveEditedUser =  ({values,table,row}) => {
+    let newValidationErrors = validateUser(values)
+    if(Object.values(newValidationErrors).some((error) => error)){
+      setValidationErrors(newValidationErrors)
+      return
+    }
+
+    setValidationErrors({})
+    console.log("logging 0",row)
+    userMutationUpdate.mutate({...values,id:row.id})
+    table.setEditingRow(null)
   }
 
   const validateUser = (user) => {
@@ -126,6 +157,9 @@ function App({userType}) {
     }
 
     setValidationErrors({})
+
+    userMutation.mutate(values)
+    
     setData([...data,values])
     table.setCreatingRow(false)
   }
@@ -281,7 +315,8 @@ function App({userType}) {
 
   const table = useMaterialReactTable({
     columns, 
-    data:dataQuery.data, 
+    data:dataQuery.data || [], 
+    getRowId: (r) => (r._id),
     initialState: { 
       columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false,"mrt-row-drag":userType === DefinedUserType.admin ? true : false },
       showColumnFilters: true,
@@ -293,7 +328,9 @@ function App({userType}) {
       showProgressBars: dataQuery.isRefetching,
       showAlertBanner: dataQuery.isError,
       isLoading: dataQuery.isLoading,
+      isSaving: userMutation.isPending,
     },
+    positionCreatingRow: "bottom",
     enableRowOrdering:true,
     enableEditing: true,
     editDisplayMode: "row",

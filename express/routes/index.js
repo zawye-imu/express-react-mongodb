@@ -29,6 +29,14 @@ router.get('/users', async function(req, res, next) {
   
 });
 
+
+router.post('/user-add', async function(req, res, next) {
+    const newUser = new Users({...req.body})
+    newUser.save()
+    .then(user => (res.json({'success':user})))
+    .catch(err => (res.json({"error":err})))
+});
+
 router.get('/user-add-dummy', async function(req, res, next) {
   const newUser = new Users({
     name: "dummy",

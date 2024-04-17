@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  ordering: { type: Number, required: true },
+  ordering: { type: Number},
   active: {type: Boolean},
   fullname: { type: String},
   company: { type: String},
