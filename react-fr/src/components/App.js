@@ -10,6 +10,7 @@ import { userType as  DefinedUserType } from '../data';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Select,MenuItem } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 // Table data スキーマ
 /**
  * @typedef {Object} TData - Table data
@@ -96,6 +97,15 @@ function App({userType}) {
   const [data,setData] = useState(sampleData);
   const [orders,setOrders] =  useState([]);
   const [validationErrors,setValidationErrors] = useState({});
+
+  const dataQuery = useQuery({
+    queryKey: ['userData'],
+    queryFn: async () =>
+      axios
+        .get('http://localhost:8000/test-data')
+        .then((res) => res.data),
+  })
+
 
   const saveEditedUser =  ({values,table}) => {
     console.log("Here",values)
@@ -271,13 +281,18 @@ function App({userType}) {
 
   const table = useMaterialReactTable({
     columns, 
-    data, 
+    data:dataQuery.data, 
     initialState: { 
       columnVisibility: { endYM: userType === DefinedUserType.admin ? true : false,"mrt-row-drag":userType === DefinedUserType.admin ? true : false },
       showColumnFilters: true,
       editingCell:null,
       columnOrder: ["mrt-row-drag","mrt-row-select","mrt-row-actions","name","fullname","active","compnay","memberID",
     "formerID","mailAddress","startYM","endYM"]
+    },
+    state: {
+      showProgressBars: dataQuery.isRefetching,
+      showAlertBanner: dataQuery.isError,
+      isLoading: dataQuery.isLoading,
     },
     enableRowOrdering:true,
     enableEditing: true,
@@ -339,6 +354,7 @@ function App({userType}) {
     <div className="App">
       <button onClick={()=> console.log(orders)}>Check Orders</button>
       <button onClick={()=> console.log(data)}>Check Data</button>
+      <button onClick={()=> dataQuery.refetch()}>Refetch Data</button>
       <button onClick={()=> table.setCreatingRow(createRow(table,{
         active: true
       }))}>Create Row</button>

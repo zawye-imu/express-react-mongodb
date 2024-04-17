@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-
+const Users = require('../models/user')
 
 function createDateFromYearMonth(yearMonthString) {
   // Split the string into year and month parts
@@ -19,6 +19,39 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+router.get('/users', async function(req, res, next) {
+  try{
+    const users = await Users.find();
+    res.json(users)
+  }catch(err){
+    res.status().json({'error':'something went wrong'})
+  }
+  
+});
+
+router.get('/user-add-dummy', async function(req, res, next) {
+  const newUser = new Users({
+    name: "dummy",
+    ordering: 0,
+    active: true,
+    fullname: "dummy name",
+    company: "DD com.Ltd",
+    memberID: "M0001",
+    formerID: "F0001",
+    mailAddress: "dd@gmail.com",
+    startYM: new Date(),
+    endYM: new Date()
+  })
+
+  newUser.save().then(
+    res.json({
+      "message":"new Dummy user added."
+    })
+  ).catch(err => res.json({
+    "error":err
+  }))
+  
+});
 
 
 router.get('/test-data', function(req, res, next) {
