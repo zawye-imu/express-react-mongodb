@@ -102,10 +102,10 @@ function App({userType}) {
 
   const dataQuery = useQuery({
     queryKey: ['userData'],
-    queryFn: async () =>
-      axios
-        .get('http://localhost:8000/users')
-        .then((res) => res.data),
+    queryFn: async () =>{
+      const data = await axios.get('http://localhost:8000/users')
+      return data.data;
+    }
   })
 
   // サーバーに追加
@@ -117,15 +117,21 @@ function App({userType}) {
 
   })
 
-  // サーバーに追加
+  // サーバーアップデート
   const userMutationUpdate = useMutation({
     mutationFn: async (data) => {
-      console.log("logging",data)
-      return 
-      // return axios.put(`http://localhost:8000/user-update/${id}`, data)
+      const id = data.id;
+      delete data.id;
+      return axios.put(`http://localhost:8000/user/${id}`, data)
+       
   },
-  // onSuccess: ()=> queryClient.setQueryData(['userData',{_id:id}],data)
-
+  onError: (error) => {
+    alert("encounter an error while updating")
+  },
+  onSuccess: (data,variables,context)=> {
+    queryClient.setQueryData(['userData',{_id:data.data._id}],data)
+  },
+  onSettled: ()=> queryClient.invalidateQueries({queryKey: ["userData"]})
   })
 
 
@@ -137,9 +143,14 @@ function App({userType}) {
     }
 
     setValidationErrors({})
-    console.log("logging 0",row)
-    userMutationUpdate.mutate({...values,id:row.id})
-    table.setEditingRow(null)
+
+      userMutationUpdate.mutateAsync({...values,id:row.id})
+      .then(() =>
+        {
+          table.setEditingRow(null)
+        }
+      ).catch(err => console.log(err))
+
   }
 
   const validateUser = (user) => {
@@ -158,7 +169,11 @@ function App({userType}) {
 
     setValidationErrors({})
 
-    userMutation.mutate(values)
+    userMutation.mutate(values,{
+      onError: (err)=> {
+        alert("User add errr! please check.")
+      }
+    })
     
     setData([...data,values])
     table.setCreatingRow(false)

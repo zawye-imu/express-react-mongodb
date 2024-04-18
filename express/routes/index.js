@@ -62,6 +62,18 @@ router.get('/user-add-dummy', async function(req, res, next) {
 });
 
 
+router.put('/user/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await Users.findByIdAndUpdate(id, { ...req.body }, { new: true });
+    res.json(user);
+  } catch (error) {
+    console.log(error)
+    res.status(500).send({"error":error});
+  }
+});
+
+
 router.get('/test-data', function(req, res, next) {
   let sampleData = [
     {
