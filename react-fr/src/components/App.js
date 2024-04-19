@@ -1,5 +1,5 @@
 import './App.css';
-import { useMemo,useState } from 'react';
+import { useMemo,useState,useContext } from 'react';
 import {
   createRow,
   MaterialReactTable,
@@ -11,11 +11,13 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Select,MenuItem } from '@mui/material';
 import { useQuery,useMutation,useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { GlobalContext } from '../contexts/globalContext';
 
 function App({userType}) {
 
   const [orders,setOrders] =  useState([]);
   const [validationErrors,setValidationErrors] = useState({});
+  const gs = useContext(GlobalContext);
 
   const queryClient = useQueryClient();
 
@@ -326,6 +328,7 @@ function App({userType}) {
       <button onClick={()=> table.setCreatingRow(createRow(table,{
         active: true
       }))}>Create Row</button>
+      <button onClick={()=> console.log(gs)}>Check context</button>
       <MaterialReactTable table={table} />
     </div>
   );

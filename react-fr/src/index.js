@@ -15,17 +15,25 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
+import Main from './main';
 
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <App userType={userType.normalUser} />,
-  },
-  {
-    path: "/super-admin",
-    element: <App userType={userType.admin}/>,
-  },
+    path:"/",
+    element: <Main></Main>,
+    children: [
+      {
+        path: "/user",
+        element: <App userType={userType.normalUser} />,
+      },
+      {
+        path: "/super-admin",
+        element: <App userType={userType.admin}/>,
+      },
+    ]
+  }
+
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
