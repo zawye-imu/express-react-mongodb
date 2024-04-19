@@ -221,6 +221,11 @@ function App({userType}) {
             views: ['month','year']
           };
           return <DatePicker {...props}
+          slotProps={{
+            textField: {
+              variant: "standard"
+            }
+          }}
           onChange={(newVal)=>{
             row._valuesCache[column.id] = newVal;
           }} label="date"></DatePicker>
