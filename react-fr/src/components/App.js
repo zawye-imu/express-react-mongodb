@@ -11,90 +11,9 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Select,MenuItem } from '@mui/material';
 import { useQuery,useMutation,useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-// Table data スキーマ
-/**
- * @typedef {Object} TData - Table data
- * @property {Object} name
- * @property {String} address
- * @property {String} city
- * @property {String} state
- */
-
-function createDateFromYearMonth(yearMonthString) {
-  // Split the string into year and month parts
-  var parts = yearMonthString.split('/');
-
-  // Extract year and month from parts
-  var year = parseInt(parts[0], 10);
-  var month = parseInt(parts[1], 10) - 1; // Subtract 1 because months are zero-based in JavaScript
-
-  // Create a new Date object with the specified year and month
-  return new Date(year, month);
-}
-/**
- * @type {TData}
- */
-const sampleData = [
-  {
-    id:1,
-    ordering: 0,  
-    active: true,
-    name: "John",
-    fullname: "JohnDoe",
-    company: '261 Erdman Ford',
-    memberID: '111',
-    formerID: '10001',
-    mailAddress: 'JD@erd.co',
-    startYM: createDateFromYearMonth('2024/04'),
-    endYM: '2024/12'
-  },
-  {
-    id:2,
-    ordering: 1, 
-    active: true,
-    name: "Jane",
-    fullname: "Jane Doe",
-    company: '261 Erdman Ford',
-    memberID: '112',
-    formerID: '10002',
-    mailAddress: 'Jane@erd.co',
-    startYM: createDateFromYearMonth('2024/04'),
-    endYM: '2024/12'
-  },
-  {
-    id:3,
-    ordering: 2, 
-    active: false,
-    name: "Aung",
-    fullname: "Than Aung",
-    company: 'Freedom Exp.',
-    memberID: '113',
-    formerID: 'HJ009',
-    mailAddress: 'ta2020@free.net',
-    startYM: createDateFromYearMonth('2024/04'),
-    endYM: '2025/12'
-  },
-  {
-    id:4,
-    ordering: 3, 
-    active: true,
-    name: "Satou",
-    fullname: "Satou",
-    company: 'Gfords',
-    memberID: '114',
-    formerID: 'HHH20',
-    mailAddress: 'sky@hotmail.com',
-    startYM: createDateFromYearMonth('2024/04'),
-    endYM: '2025/12'
-  }
-];
-
-const companySelect = sampleData.map(d => d.company);
 
 function App({userType}) {
-  //should be memoized or stable
 
-  const [data,setData] = useState(sampleData);
   const [orders,setOrders] =  useState([]);
   const [validationErrors,setValidationErrors] = useState({});
 
@@ -170,12 +89,12 @@ function App({userType}) {
     setValidationErrors({})
 
     userMutation.mutate(values,{
+      
       onError: (err)=> {
         alert("User add errr! please check.")
       }
     })
     
-    setData([...data,values])
     table.setCreatingRow(false)
   }
   
@@ -233,15 +152,6 @@ function App({userType}) {
             //　値が変わるため
             setVal(event.target.value)
 
-            //　直接編集のため
-            const tmp = [...data]
-            let targetData = tmp.find(t => t.id ===  row.original.id);
-            if(targetData) {
-              targetData.active = event.target.value;
-              setData(tmp);
-              table.setEditingCell(false)
-            }
-            console.log("logging",table,row,cell)
           }}
           >
             <MenuItem value={true}>有効</MenuItem>
@@ -268,7 +178,7 @@ function App({userType}) {
         accessorKey: 'company', //normal accessorKey
         header: '会社',
         filterVariant: 'select',
-        filterSelectOptions: companySelect,
+        filterSelectOptions: [],
         size: 200,
       },
       {
@@ -325,7 +235,7 @@ function App({userType}) {
         size: 200,
       },
     ],
-    [data,validationErrors]
+    [validationErrors]
   );
 
   const table = useMaterialReactTable({
@@ -361,9 +271,7 @@ function App({userType}) {
         // 順番置き換え
         let draggedIndex = draggingRow.index;
         let hoveredIndex = hoveredRow.index;
-        let tmp = data[draggedIndex]
-        data[draggedIndex] = data[hoveredIndex]
-        data[hoveredIndex] = tmp
+        
         
         // ドラッグした行を下か上に置く
         // data.splice(
@@ -371,12 +279,18 @@ function App({userType}) {
         //   0,
         //   data.splice(draggingRow.index, 1)[0],
         // );
+        let data  = []
+        queryClient.setQueryData(["userData"],(oldData) =>{
+          data = [...oldData];
+          let tmp = oldData[draggedIndex]
+          data[draggedIndex] = data[hoveredIndex]
+          data[hoveredIndex] = tmp
+          return data
+        })
 
         // DB保存するため、idプロパティでもOK
         const orders = data.map(d=>d.ordering)
         setOrders(orders)
-      
-        setData([...data]);
       },
     }),
     enableRowSelection: true,
@@ -405,8 +319,10 @@ function App({userType}) {
   return (
     <div className="App">
       <button onClick={()=> console.log(orders)}>Check Orders</button>
-      <button onClick={()=> console.log(data)}>Check Data</button>
       <button onClick={()=> dataQuery.refetch()}>Refetch Data</button>
+      <button onClick={()=> {
+        console.log(dataQuery.data)
+      }}>Check Query</button>
       <button onClick={()=> table.setCreatingRow(createRow(table,{
         active: true
       }))}>Create Row</button>
